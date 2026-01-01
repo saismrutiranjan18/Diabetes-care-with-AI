@@ -1,0 +1,46 @@
+name: CI Pipeline
+
+on:
+  issues:
+    types: [opened, edited]
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate-issue:
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Issue Labels
+        run: |
+          LABELS="${{ toJson(github.event.issue.labels.*.name) }}"
+          echo "Labels: $LABELS"
+
+          if [[ "$LABELS" != *"bug"* && "$LABELS" != *"feature"* ]]; then
+            echo " Issue must have bug or feature label"
+            exit 1
+          fi
+          echo " Issue label valid"
+
+  build-test:
+    if: github.event_name != 'issues'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
