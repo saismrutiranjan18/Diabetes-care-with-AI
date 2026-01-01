@@ -1,0 +1,10 @@
+name: Feature Request
+description: Request a new feature
+labels: ["feature"]
+body:
+  - type: textarea
+    id: feature
+    attributes:
+      label: Feature Description
+    validations:
+      required: true
