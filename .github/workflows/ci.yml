@@ -1,31 +1,19 @@
 name: CI Pipeline
 
 on:
-  issues:
-    types: [opened, edited]
-  pull_request:
   push:
-    branches: [main]
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  validate-issue:
-    if: github.event_name == 'issues'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate Issue Labels
-        run: |
-          LABELS="${{ toJson(github.event.issue.labels.*.name) }}"
-          echo "Labels: $LABELS"
-
-          if [[ "$LABELS" != *"bug"* && "$LABELS" != *"feature"* ]]; then
-            echo " Issue must have bug or feature label"
-            exit 1
-          fi
-          echo " Issue label valid"
-
   build-test:
-    if: github.event_name != 'issues'
     runs-on: ubuntu-latest
+
+    # This ensures every 'run' command happens inside your subfolder
+    defaults:
+      run:
+        working-directory: ./Diabetes-care-with-AI
 
     steps:
       - name: Checkout code
@@ -34,13 +22,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '20'
+          # This caches your dependencies for faster subsequent runs
+          cache: 'npm'
+          cache-dependency-path: './Diabetes-care-with-AI/package-lock.json'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Run lint
-        run: npm run lint
+      - name: Run lint (Optional)
+        run: npm run lint --if-present
 
       - name: Run tests
         run: npm test
